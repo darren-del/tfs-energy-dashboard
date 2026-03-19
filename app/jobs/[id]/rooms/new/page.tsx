@@ -42,9 +42,10 @@ export default function NewRoomPage() {
 
   useEffect(() => {
     if (!id) return
-    const j = getJob(id)
-    if (!j) { router.push('/'); return }
-    setJob(j)
+    getJob(id).then(j => {
+      if (!j) { router.push('/'); return }
+      setJob(j)
+    })
   }, [id])
 
   useEffect(() => {
@@ -94,19 +95,19 @@ export default function NewRoomPage() {
     }
   }
 
-  function save() {
+  async function save() {
     const e = validate()
     if (Object.keys(e).length) { setErrors(e); return }
     const updated = { ...job!, rooms: [...job!.rooms, buildRoom()] }
-    saveJob(updated)
+    await saveJob(updated)
     router.push(`/jobs/${id}`)
   }
 
-  function saveAndAddAnother() {
+  async function saveAndAddAnother() {
     const e = validate()
     if (Object.keys(e).length) { setErrors(e); return }
     const updated = { ...job!, rooms: [...job!.rooms, buildRoom()] }
-    saveJob(updated); setJob(updated)
+    await saveJob(updated); setJob(updated)
     const savedFloor = floor
     setAreaDescription(''); setCurrentFittingCode(''); setQuantity(1)
     setHoursPerDay(8); setSufficientLighting(true); setBallastWattOverride('')

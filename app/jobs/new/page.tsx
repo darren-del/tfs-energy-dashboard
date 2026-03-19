@@ -60,7 +60,7 @@ export default function NewJobPage() {
     setStep(s => s + 1)
   }
 
-  function create() {
+  async function create() {
     const job: Job = {
       id: generateId(),
       ...form,
@@ -68,7 +68,7 @@ export default function NewJobPage() {
       createdAt: new Date().toISOString(),
       status: 'draft',
     }
-    saveJob(job)
+    await saveJob(job)
     router.push(`/jobs/${job.id}`)
   }
 

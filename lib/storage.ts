@@ -1,35 +1,35 @@
+import { supabase } from './supabase'
 import { Job } from './types'
 
-const STORAGE_KEY = 'tfs_energy_jobs'
-
-export function getJobs(): Job[] {
-  if (typeof window === 'undefined') return []
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
+export async function getJobs(): Promise<Job[]> {
+  const { data, error } = await supabase
+    .from('jobs')
+    .select('data')
+    .order('created_at', { ascending: false })
+  if (error) { console.error(error); return [] }
+  return (data ?? []).map((r: { data: Job }) => r.data)
 }
 
-export function saveJob(job: Job): void {
-  const jobs = getJobs()
-  const idx = jobs.findIndex(j => j.id === job.id)
-  if (idx >= 0) {
-    jobs[idx] = job
-  } else {
-    jobs.unshift(job)
-  }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs))
+export async function getJob(id: string): Promise<Job | undefined> {
+  const { data, error } = await supabase
+    .from('jobs')
+    .select('data')
+    .eq('id', id)
+    .single()
+  if (error) return undefined
+  return data?.data as Job
 }
 
-export function getJob(id: string): Job | undefined {
-  return getJobs().find(j => j.id === id)
+export async function saveJob(job: Job): Promise<void> {
+  const { error } = await supabase
+    .from('jobs')
+    .upsert({ id: job.id, data: job, created_at: job.createdAt }, { onConflict: 'id' })
+  if (error) console.error(error)
 }
 
-export function deleteJob(id: string): void {
-  const jobs = getJobs().filter(j => j.id !== id)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs))
+export async function deleteJob(id: string): Promise<void> {
+  const { error } = await supabase.from('jobs').delete().eq('id', id)
+  if (error) console.error(error)
 }
 
 export function generateId(): string {

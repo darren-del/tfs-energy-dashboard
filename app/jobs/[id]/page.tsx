@@ -44,10 +44,11 @@ export default function JobDetailPage() {
 
   useEffect(() => {
     if (!id) return
-    const j = getJob(id)
-    if (!j) { setNotFound(true); return }
-    setJob(j)
-    setSettingsForm(j)
+    getJob(id).then(j => {
+      if (!j) { setNotFound(true); return }
+      setJob(j)
+      setSettingsForm(j)
+    })
   }, [id])
 
   if (!job && !notFound) return <LoadingScreen />
@@ -70,19 +71,19 @@ export default function JobDetailPage() {
   const j = job as Job
   const summary = calcJob(j)
 
-  function deleteRoom(roomId: string) {
+  async function deleteRoom(roomId: string) {
     const updated = { ...j, rooms: j.rooms.filter(r => r.id !== roomId) }
-    saveJob(updated); setJob(updated)
+    await saveJob(updated); setJob(updated)
   }
 
-  function markComplete() {
+  async function markComplete() {
     const updated = { ...j, status: (j.status === 'complete' ? 'draft' : 'complete') as 'draft' | 'complete' }
-    saveJob(updated); setJob(updated)
+    await saveJob(updated); setJob(updated)
   }
 
-  function saveSettings() {
+  async function saveSettings() {
     const updated = { ...j, ...settingsForm }
-    saveJob(updated); setJob(updated)
+    await saveJob(updated); setJob(updated)
     setSaved(true); setTimeout(() => setSaved(false), 2000)
   }
 
@@ -435,7 +436,7 @@ export default function JobDetailPage() {
                     <p className="text-red-500 text-xs mt-0.5 font-medium">All room data will be lost. This cannot be undone.</p>
                     <div className="flex gap-2 mt-3">
                       <button
-                        onClick={() => { deleteJob(id); router.push('/') }}
+                        onClick={async () => { await deleteJob(id); router.push('/') }}
                         className="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all"
                       >
                         Yes, Delete

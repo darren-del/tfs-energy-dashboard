@@ -14,8 +14,7 @@ export default function DashboardPage() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setJobs(getJobs())
-    setMounted(true)
+    getJobs().then(j => { setJobs(j); setMounted(true) })
   }, [])
 
   const summaries = jobs.map(j => ({ job: j, summary: calcJob(j) }))
