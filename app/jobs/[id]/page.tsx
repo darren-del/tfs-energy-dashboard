@@ -273,6 +273,51 @@ export default function JobDetailPage() {
                 </div>
               </>
             )}
+
+            {/* Aircon Tally */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-[#252768]/3 to-transparent">
+                <h3 className="font-display font-bold text-[#252768] text-lg">Air Conditioner Count</h3>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">Record total units on site by BTU size</p>
+              </div>
+              <div className="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {([
+                  { key: 'btu9000',  label: '9,000 BTU' },
+                  { key: 'btu12000', label: '12,000 BTU' },
+                  { key: 'btu18000', label: '18,000 BTU' },
+                  { key: 'btu24000', label: '24,000 BTU' },
+                ] as const).map(({ key, label }) => {
+                  const count = (j.aircons?.[key] ?? 0)
+                  return (
+                    <div key={key} className="flex flex-col items-center gap-2 bg-[#f0f2f8] rounded-xl p-4">
+                      <p className="text-[10px] font-bold text-[#252768]/60 uppercase tracking-widest">{label}</p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={async () => {
+                            const updated = { ...j, aircons: { ...(j.aircons ?? { btu9000: 0, btu12000: 0, btu18000: 0, btu24000: 0 }), [key]: Math.max(0, count - 1) } }
+                            await saveJob(updated); setJob(updated)
+                          }}
+                          className="w-9 h-9 rounded-lg bg-white border-2 border-slate-200 hover:border-[#252768] hover:bg-[#252768] hover:text-white text-slate-500 font-bold text-lg transition-all flex items-center justify-center"
+                        >−</button>
+                        <span className="font-display font-bold text-2xl text-[#252768] w-8 text-center">{count}</span>
+                        <button
+                          onClick={async () => {
+                            const updated = { ...j, aircons: { ...(j.aircons ?? { btu9000: 0, btu12000: 0, btu18000: 0, btu24000: 0 }), [key]: count + 1 } }
+                            await saveJob(updated); setJob(updated)
+                          }}
+                          className="w-9 h-9 rounded-lg bg-[#252768] hover:bg-[#1a1c4e] text-white font-bold text-lg transition-all flex items-center justify-center"
+                        >+</button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              {((j.aircons?.btu9000 ?? 0) + (j.aircons?.btu12000 ?? 0) + (j.aircons?.btu18000 ?? 0) + (j.aircons?.btu24000 ?? 0)) > 0 && (
+                <div className="px-6 pb-4 text-xs text-slate-400 font-medium">
+                  Total units: <span className="font-bold text-[#252768]">{(j.aircons?.btu9000 ?? 0) + (j.aircons?.btu12000 ?? 0) + (j.aircons?.btu18000 ?? 0) + (j.aircons?.btu24000 ?? 0)}</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -341,6 +386,28 @@ export default function JobDetailPage() {
                     </table>
                   </div>
                 </div>
+
+                {((j.aircons?.btu9000 ?? 0) + (j.aircons?.btu12000 ?? 0) + (j.aircons?.btu18000 ?? 0) + (j.aircons?.btu24000 ?? 0)) > 0 && (
+                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-[#252768]/3 to-transparent">
+                      <h3 className="font-display font-bold text-[#252768] text-lg">Air Conditioners on Site</h3>
+                    </div>
+                    <div className="p-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {([
+                        { key: 'btu9000',  label: '9,000 BTU' },
+                        { key: 'btu12000', label: '12,000 BTU' },
+                        { key: 'btu18000', label: '18,000 BTU' },
+                        { key: 'btu24000', label: '24,000 BTU' },
+                      ] as const).map(({ key, label }) => (
+                        <div key={key} className="bg-[#f0f2f8] rounded-xl px-4 py-3 text-center">
+                          <p className="text-[10px] font-bold text-[#252768]/50 uppercase tracking-widest">{label}</p>
+                          <p className="font-display font-bold text-3xl text-[#252768] mt-1">{j.aircons?.[key] ?? 0}</p>
+                          <p className="text-xs text-slate-400 font-medium">units</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>

@@ -13,6 +13,7 @@ export interface Job {
   installPerFitting: number
   disposalPerFitting: number
   rooms: Room[]
+  aircons: { btu9000: number; btu12000: number; btu18000: number; btu24000: number }
   createdAt: string
   status: 'draft' | 'complete'
 }
