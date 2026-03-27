@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { Lock, LogIn } from 'lucide-react'
 
-const ADMIN_EMAIL = 'admin@tfs-energy.com'
+const ADMIN_EMAIL = 'phil@tfsenergy.co.za'
 
 export default function LoginPage() {
   const router = useRouter()
