@@ -39,6 +39,7 @@ export default function JobDetailPage() {
   const [notFound, setNotFound] = useState(false)
   const [tab, setTab] = useState<'rooms' | 'summary' | 'settings'>('rooms')
   const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [deleteRoomConfirm, setDeleteRoomConfirm] = useState<string | null>(null)
   const [settingsForm, setSettingsForm] = useState<Partial<Job>>({})
   const [saved, setSaved] = useState(false)
 
@@ -244,13 +245,27 @@ export default function JobDetailPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex justify-end mt-2 pt-2 border-t border-slate-50">
-                        <button
-                          onClick={() => deleteRoom(room.id)}
-                          className="flex items-center gap-1 text-xs text-slate-300 hover:text-red-500 px-2.5 py-1.5 rounded-lg hover:bg-red-50 transition-all font-medium"
-                        >
-                          <Trash2 size={11} /> Remove
-                        </button>
+                      <div className="flex justify-end items-center gap-2 mt-2 pt-2 border-t border-slate-50">
+                        {deleteRoomConfirm === room.id ? (
+                          <>
+                            <span className="text-xs text-red-500 font-medium">Remove this room?</span>
+                            <button
+                              onClick={() => setDeleteRoomConfirm(null)}
+                              className="text-xs text-slate-400 hover:text-slate-600 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 transition-all font-medium"
+                            >Cancel</button>
+                            <button
+                              onClick={() => { deleteRoom(room.id); setDeleteRoomConfirm(null) }}
+                              className="text-xs text-white bg-red-500 hover:bg-red-600 px-2.5 py-1.5 rounded-lg transition-all font-medium"
+                            >Yes, remove</button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => setDeleteRoomConfirm(room.id)}
+                            className="flex items-center gap-1 text-xs text-slate-300 hover:text-red-500 px-2.5 py-1.5 rounded-lg hover:bg-red-50 transition-all font-medium"
+                          >
+                            <Trash2 size={11} /> Remove
+                          </button>
+                        )}
                       </div>
                     </div>
                   )
