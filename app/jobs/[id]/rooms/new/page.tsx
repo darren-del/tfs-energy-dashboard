@@ -39,6 +39,7 @@ export default function NewRoomPage() {
   const [proposedFittingCode, setProposedFittingCode] = useState('')
   const [comments, setComments] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [aircons, setAircons] = useState({ btu9000: 0, btu12000: 0, btu18000: 0, btu24000: 0 })
 
   useEffect(() => {
     if (!id) return
@@ -92,6 +93,7 @@ export default function NewRoomPage() {
       ballastWattOverride: ballastWattOverride ? parseFloat(ballastWattOverride) : undefined,
       proposedFittingCode,
       comments: comments.trim(),
+      aircons,
     }
   }
 
@@ -112,6 +114,7 @@ export default function NewRoomPage() {
     setAreaDescription(''); setCurrentFittingCode(''); setQuantity(1)
     setHoursPerDay(8); setSufficientLighting(true); setBallastWattOverride('')
     setProposedFittingCode(''); setComments(''); setErrors({})
+    setAircons({ btu9000: 0, btu12000: 0, btu18000: 0, btu24000: 0 })
     setFloor(savedFloor)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -290,6 +293,39 @@ export default function NewRoomPage() {
 
         {/* Live savings preview */}
         <SavingsPreview room={partialRoom} job={job} />
+
+        {/* Aircon tally */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-[#252768]/3 to-transparent">
+            <p className="font-display font-bold text-[#252768] text-base">Air Conditioners in This Room</p>
+            <p className="text-xs text-slate-400 font-medium mt-0.5">Count any aircons in this area — totals accumulate across all rooms</p>
+          </div>
+          <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {([
+              { key: 'btu9000',  label: '9,000 BTU' },
+              { key: 'btu12000', label: '12,000 BTU' },
+              { key: 'btu18000', label: '18,000 BTU' },
+              { key: 'btu24000', label: '24,000 BTU' },
+            ] as const).map(({ key, label }) => (
+              <div key={key} className="flex flex-col items-center gap-2 bg-[#f0f2f8] rounded-xl p-3">
+                <p className="text-[10px] font-bold text-[#252768]/60 uppercase tracking-widest">{label}</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAircons(a => ({ ...a, [key]: Math.max(0, a[key] - 1) }))}
+                    className="w-8 h-8 rounded-lg bg-white border-2 border-slate-200 hover:border-[#252768] hover:bg-[#252768] hover:text-white text-slate-500 font-bold text-lg transition-all flex items-center justify-center"
+                  >−</button>
+                  <span className="font-display font-bold text-2xl text-[#252768] w-7 text-center">{aircons[key]}</span>
+                  <button
+                    type="button"
+                    onClick={() => setAircons(a => ({ ...a, [key]: a[key] + 1 }))}
+                    className="w-8 h-8 rounded-lg bg-[#252768] hover:bg-[#1a1c4e] text-white font-bold text-lg transition-all flex items-center justify-center"
+                  >+</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Save buttons */}
         <div className="flex flex-col sm:flex-row gap-3 pt-1">
