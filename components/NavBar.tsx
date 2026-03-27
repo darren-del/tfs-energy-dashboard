@@ -1,12 +1,20 @@
 'use client'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Plus, LayoutDashboard } from 'lucide-react'
+import { Plus, LayoutDashboard, LogOut } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 export default function NavBar() {
   const path = usePathname()
+  const router = useRouter()
   const isHome = path === '/'
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
 
   return (
     <header className="bg-[#252768] sticky top-0 z-40 shadow-xl shadow-[#252768]/20">
@@ -49,6 +57,14 @@ export default function NavBar() {
             <Plus size={15} />
             New Audit
           </Link>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 text-sm font-medium text-white/50 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/10 transition-all"
+            title="Sign out"
+          >
+            <LogOut size={15} />
+            <span className="hidden sm:inline">Sign Out</span>
+          </button>
         </div>
       </div>
     </header>
