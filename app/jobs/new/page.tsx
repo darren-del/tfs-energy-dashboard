@@ -65,7 +65,6 @@ export default function NewJobPage() {
       id: generateId(),
       ...form,
       rooms: [],
-      aircons: { btu9000: 0, btu12000: 0, btu18000: 0, btu24000: 0 },
       createdAt: new Date().toISOString(),
       status: 'draft',
     }
