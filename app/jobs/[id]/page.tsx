@@ -1,8 +1,11 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import NavBar from '@/components/NavBar'
+
+const DownloadReportButton = dynamic(() => import('@/components/DownloadReportButton'), { ssr: false })
 import StatsCard from '@/components/StatsCard'
 import { EnergyComparisonChart, SavingsProjectionChart } from '@/components/Charts'
 import { getJob, saveJob, deleteJob } from '@/lib/storage'
@@ -125,6 +128,7 @@ export default function JobDetailPage() {
               <p className="text-white/50 text-sm mt-1 font-medium">{j.siteAddress} · {j.date}</p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
+              {j.rooms.length > 0 && <DownloadReportButton job={j} />}
               <button
                 onClick={markComplete}
                 className="hidden sm:flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg border transition-all border-white/20 text-white/60 hover:bg-white/10 hover:text-white"
