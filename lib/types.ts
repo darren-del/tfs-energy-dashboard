@@ -76,3 +76,13 @@ export interface JobSummary {
   year4Savings: number
   cumulativeSavings4yr: number
 }
+
+export interface ReportTextOverrides {
+  coverNote: string
+  letterPara1: string
+  letterPara2: string
+  letterMaintTitle: string
+  letterMaintPoints: string   // newline-separated bullet points
+  letterTariffComment: string
+  overviewPoints: string      // newline-separated bullet points
+}

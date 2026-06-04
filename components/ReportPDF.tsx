@@ -1,9 +1,10 @@
 'use client'
 import React from 'react'
-import { Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer'
-import { Job } from '@/lib/types'
+import { Document, Page, View, Text, StyleSheet, Image, Svg, Rect, Line } from '@react-pdf/renderer'
+import { Job, ReportTextOverrides } from '@/lib/types'
 import { calcJob, calcRoom, formatRands, formatNum } from '@/lib/calculations'
 import { getCurrentFitting, getProposedFitting } from '@/lib/fittings'
+import { getDefaultTexts } from '@/lib/reportDefaults'
 
 const NAVY = '#252768'
 const YELLOW = '#F2C519'
@@ -144,26 +145,20 @@ function SH({ title, sub }: { title: string; sub?: string }) {
 }
 
 // ── 1. COVER ─────────────────────────────────────────────────────────────────
-function CoverPage({ job }: { job: Job }) {
+function CoverPage({ job, texts, logoSrc }: { job: Job; texts: ReportTextOverrides; logoSrc?: string }) {
   return (
     <Page size="A4" style={s.page}>
       <View style={s.coverPage}>
         <View>
-          <Text style={s.coverLogo}>TFS ENERGY</Text>
+          {logoSrc
+            ? <Image src={logoSrc} style={{ height: 36, width: 'auto', alignSelf: 'flex-start' }} />
+            : <Text style={s.coverLogo}>TFS ENERGY</Text>
+          }
           <Text style={s.coverLogoSub}>TOTAL FACILITIES SOLUTIONS</Text>
         </View>
 
         <View style={s.coverNote}>
-          <Text style={s.coverNoteText}>
-            Note: There is no charge for this report which has taken professional time and effort to create. All we ask is that
-            if ever you decide to proceed in the future, you give us the opportunity to re-quote against anyone else you may engage with.{'\n\n'}
-            The price quoted herein includes full installation and project management.{'\n\n'}
-            Please note that although we calculate what the correct lux levels will be with a fair amount of accuracy, at any stage when
-            we have to increase the quantity of luminaires to achieve a higher lux level, this is for the client's account. Any faulty
-            wiring, conduit, fittings or plug points which need replacing will be invoiced as a separate cost to the client.{'\n\n'}
-            Our costings are based on the quantities on the initial count. There can be inaccuracies and any changes will be subject to
-            discussion with the client and ultimately for the client's account.
-          </Text>
+          <Text style={s.coverNoteText}>{texts.coverNote}</Text>
         </View>
 
         <View>
@@ -185,7 +180,8 @@ function CoverPage({ job }: { job: Job }) {
 }
 
 // ── 2. DEAR SIRS LETTER ───────────────────────────────────────────────────────
-function LetterPage({ job }: { job: Job }) {
+function LetterPage({ job, texts }: { job: Job; texts: ReportTextOverrides }) {
+  const maintPoints = texts.letterMaintPoints.split('\n').filter(Boolean)
   return (
     <Page size="A4" style={{ ...s.page, ...s.contentPage }}>
       <PH client={job.clientName} />
@@ -195,31 +191,14 @@ function LetterPage({ job }: { job: Job }) {
       <Text style={s.body}>Dear Sirs,</Text>
       <Text style={{ ...s.bodyBold, marginTop: 4 }}>RE: LED Lighting Upgrade — Energy Audit Report</Text>
       <View style={s.yellowBar} />
-      <Text style={s.body}>
-        Thank you for the opportunity to do a Lighting Energy Efficiency Audit of your facility based on the light quantities as
-        required. Please be aware that the calculations attached are mathematical calculations and although they should be very
-        accurate, there might be some variances caused by a tariff variance or the number of hours being incorrect. We have taken
-        the cost of electricity from your electricity account, used the hours your staff have said your lamps are burning and taken
-        the wattages of your current installation and placed them in a spreadsheet which uses straightforward mathematics to
-        calculate the numbers.
-      </Text>
-      <Text style={s.body}>
-        We have used energy-saving technology which we view to be most suitable throughout. Quality of product and lifespan is
-        important to us as we want the technology to have reliability and longevity. The LED luminaires we recommend are always
-        60,000 working hours and above.
-      </Text>
-      <Text style={{ ...s.bodyBold, marginTop: 4 }}>Savings which will have a substantial effect but not included:</Text>
-      <Text style={s.body}>{'  1.  No maintenance or purchase of lights for at least 3 years. No maintenance teams to pay. This frees maintenance\n       staff up to attend to other machinery.'}</Text>
-      <Text style={s.body}>{'  2.  No budget expenditure on lights for at least 3 years.'}</Text>
-      <Text style={s.body}>{'  3.  Carbon Tax when it is implemented.'}</Text>
+      <Text style={s.body}>{texts.letterPara1}</Text>
+      <Text style={s.body}>{texts.letterPara2}</Text>
+      <Text style={{ ...s.bodyBold, marginTop: 4 }}>{texts.letterMaintTitle}</Text>
+      {maintPoints.map((pt, i) => (
+        <Text key={i} style={s.body}>{`  ${i + 1}.  ${pt}`}</Text>
+      ))}
       <Text style={{ ...s.bodyBold, marginTop: 8 }}>COMMENT ON TARIFF HIKES</Text>
-      <Text style={s.body}>
-        Eskom has been awarded increases to recover losses from corruption and loopholes in the MYPD (Multi-Year Price
-        Determination) rules by increasing your tariffs by an estimated {job.eskomIncrease}% annually. Each successive increase
-        amplifies the return on this investment — the savings generated by LED fittings grow year on year. This report includes
-        a 4-year financial projection incorporating the applicable Eskom escalation rate so that you can see the compounding
-        benefit over time.
-      </Text>
+      <Text style={s.body}>{texts.letterTariffComment}</Text>
       <Text style={{ ...s.body, marginTop: 10 }}>Yours faithfully,</Text>
       <Text style={{ ...s.bodyBold, marginTop: 18 }}>Philip Melton</Text>
       <Text style={s.body}>Managing Director · TFS Energy · 082-525-1796 · pmelton@tfsenergy.co.za</Text>
@@ -229,17 +208,8 @@ function LetterPage({ job }: { job: Job }) {
 }
 
 // ── 3. PROJECT OVERVIEW + REFERENCES ─────────────────────────────────────────
-function OverviewPage({ job }: { job: Job }) {
-  const points = [
-    'The current view has been replaced in the report with energy-savings globes and fittings on an estimated requirement basis.',
-    'We have allowed for new fittings.',
-    'We highly recommend the removal of current lights.',
-    `The warranty offered is a full 3-year replacement carry-in uninstalled. It is the duty of the client's maintenance department to change out any faulty lights. We have not in 12 years experienced very many faulty products; such is the quality of the luminaires used.`,
-    'The reduction in electricity on this report is substantial per annum.',
-    'Please note that although we calculate what the correct lux levels will be with a fair amount of accuracy, at any stage when we have to increase the quantity of luminaires to achieve a higher lux level, this is for the client\'s account.',
-    `Eskom tariff escalation of ${job.eskomIncrease}% per annum has been used in all financial projections.`,
-    'We do not profit from the installation cost. We pass on these costs directly.',
-  ]
+function OverviewPage({ job, texts }: { job: Job; texts: ReportTextOverrides }) {
+  const points = texts.overviewPoints.split('\n').filter(Boolean)
   const refs = [
     { company: 'Alcon Aluminium', contact: 'CEO Mr. Douglas Gray', phone: '082-788-1863' },
     { company: 'Sunbake Bakeries', contact: 'Engineer Mr. Danie Combrink', phone: '079-893-8864' },
@@ -281,15 +251,20 @@ function OverviewPage({ job }: { job: Job }) {
 // ── 4. EXECUTIVE SUMMARY ─────────────────────────────────────────────────────
 function ExecutiveSummaryPage({ job }: { job: Job }) {
   const sum = calcJob(job)
-  const maintSavings = sum.totalCurrentCostPerYear * MAINT_RATE
-  const totalSavingsY1 = sum.totalAnnualSavings + maintSavings
-  const totalSavingsY2 = totalSavingsY1 * (1 + job.eskomIncrease / 100)
-  const totalSavingsY3 = totalSavingsY2 * (1 + job.eskomIncrease / 100)
-  const totalSavingsY4 = totalSavingsY3 * (1 + job.eskomIncrease / 100)
-  const total4yr = totalSavingsY1 + totalSavingsY2 + totalSavingsY3 + totalSavingsY4
+  const eskom = job.eskomIncrease / 100
+  const maintY1 = sum.totalCurrentCostPerYear * MAINT_RATE
+  const totalSavingsY1 = sum.totalAnnualSavings + maintY1
+
+  // Build 10-year savings
+  const yearlySavings = Array.from({ length: 10 }, (_, i) =>
+    totalSavingsY1 * Math.pow(1 + eskom, i)
+  )
+  const total10yr = yearlySavings.reduce((a, b) => a + b, 0)
+  const total4yr = yearlySavings.slice(0, 4).reduce((a, b) => a + b, 0)
+
   const savingsPct = sum.totalCurrentCostPerYear > 0 ? (sum.totalAnnualSavings / sum.totalCurrentCostPerYear) * 100 : 0
   const roiMonths = totalSavingsY1 > 0 ? sum.totalProjectCost / (totalSavingsY1 / 12) : 0
-  const eskomLast5 = ((Math.pow(1 + job.eskomIncrease / 100, 5) - 1) * 100).toFixed(1)
+  const eskomLast5 = ((Math.pow(1 + eskom, 5) - 1) * 100).toFixed(1)
   const savingsY1AfterCost = totalSavingsY1 - sum.totalProjectCost
 
   const rows: { label: string; value: string; yellow?: boolean }[] = [
@@ -303,10 +278,13 @@ function ExecutiveSummaryPage({ job }: { job: Job }) {
     { label: 'Savings Year 1 After Retrofit Costs', value: formatRands(savingsY1AfterCost), yellow: savingsY1AfterCost > 0 },
     { label: 'Eskom Annual Increase % Used', value: `${job.eskomIncrease}%` },
     { label: 'Eskom Increases Compounded over 5 Years', value: `${eskomLast5}%` },
-    { label: 'Savings Year 2', value: formatRands(totalSavingsY2) },
-    { label: 'Savings Year 3', value: formatRands(totalSavingsY3) },
-    { label: 'Savings Year 4', value: formatRands(totalSavingsY4) },
+    { label: 'Savings Year 2', value: formatRands(yearlySavings[1]) },
+    { label: 'Savings Year 3', value: formatRands(yearlySavings[2]) },
+    { label: 'Savings Year 4', value: formatRands(yearlySavings[3]) },
     { label: 'Total Savings Over 4 Years', value: formatRands(total4yr), yellow: true },
+    { label: 'Savings Year 5', value: formatRands(yearlySavings[4]) },
+    { label: 'Savings Year 10', value: formatRands(yearlySavings[9]) },
+    { label: 'Total Savings Over 10 Years', value: formatRands(total10yr), yellow: true },
     { label: 'Return on Investment in Months', value: roiMonths > 0 ? formatNum(roiMonths, 2) : '—', yellow: true },
   ]
 
@@ -1357,26 +1335,164 @@ function AirconPage({ job }: { job: Job }) {
   )
 }
 
+// ── 10-YEAR SAVINGS PROJECTION ────────────────────────────────────────────────
+function CumulativeSavingsChart({ data, investment }: { data: number[]; investment: number }) {
+  const chartW = 490
+  const chartH = 110
+  const maxY = Math.max(...data, investment) * 1.12
+  if (maxY === 0) return null
+
+  const barW = 30
+  const totalW = barW * data.length
+  const gap = (chartW - totalW) / (data.length + 1)
+  const toH = (v: number) => Math.max(2, (Math.max(0, v) / maxY) * chartH)
+  const investLineY = chartH - (investment / maxY) * chartH
+
+  return (
+    <View>
+      <Svg width={chartW} height={chartH + 4}>
+        {/* Break-even line (yellow) */}
+        <Line x1={0} y1={investLineY} x2={chartW} y2={investLineY} stroke={YELLOW} strokeWidth={1.5} />
+        {/* Bars */}
+        {data.map((val, i) => {
+          const bh = toH(val)
+          const x = gap + i * (barW + gap)
+          return (
+            <Rect key={i} x={x} y={chartH - bh} width={barW} height={bh}
+              fill={val >= investment ? '#1a7a1a' : NAVY} />
+          )
+        })}
+      </Svg>
+      {/* X-axis labels */}
+      <View style={{ flexDirection: 'row', marginTop: 2 }}>
+        {data.map((_, i) => (
+          <View key={i} style={{ width: barW + gap, paddingLeft: gap / 2 }}>
+            <Text style={{ fontSize: 5.5, color: MID, textAlign: 'center' }}>Yr {i + 1}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  )
+}
+
+function TenYearProjectionPage({ job }: { job: Job }) {
+  const sum = calcJob(job)
+  const eskom = job.eskomIncrease / 100
+  const maintY1 = sum.totalCurrentCostPerYear * MAINT_RATE
+  const totalY1 = sum.totalAnnualSavings + maintY1
+
+  // Annual savings for each year with Eskom escalation
+  const annualSavings = Array.from({ length: 10 }, (_, i) =>
+    totalY1 * Math.pow(1 + eskom, i)
+  )
+
+  // Cumulative savings
+  const cumulative: number[] = []
+  annualSavings.forEach((s, i) => cumulative.push((cumulative[i - 1] ?? 0) + s))
+
+  const total10yr = cumulative[9]
+  const roiMonths = totalY1 > 0 ? sum.totalProjectCost / (totalY1 / 12) : 0
+  const breakEvenYr = cumulative.findIndex(c => c >= sum.totalProjectCost) + 1
+
+  function fr(n: number) { return formatRands(n) }
+
+  return (
+    <Page size="A4" style={{ ...s.page, ...s.contentPage }}>
+      <PH client={job.clientName} />
+      <SH title="10-Year Savings Projection" sub={`${job.clientName} · ${job.eskomIncrease}% annual Eskom escalation applied`} />
+
+      {/* KPI cards */}
+      <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+        <View style={{ flex: 1, backgroundColor: NAVY, borderRadius: 4, padding: '10 12' }}>
+          <Text style={{ fontSize: 6, color: '#ffffff70', fontFamily: 'Helvetica-Bold', letterSpacing: 0.5, marginBottom: 3 }}>YEAR 1 TOTAL SAVINGS</Text>
+          <Text style={{ fontSize: 13, fontFamily: 'Helvetica-Bold', color: YELLOW }}>{fr(totalY1)}</Text>
+        </View>
+        <View style={{ flex: 1, backgroundColor: NAVY, borderRadius: 4, padding: '10 12' }}>
+          <Text style={{ fontSize: 6, color: '#ffffff70', fontFamily: 'Helvetica-Bold', letterSpacing: 0.5, marginBottom: 3 }}>TOTAL 10-YEAR SAVINGS</Text>
+          <Text style={{ fontSize: 13, fontFamily: 'Helvetica-Bold', color: YELLOW }}>{fr(total10yr)}</Text>
+        </View>
+        <View style={{ flex: 1, backgroundColor: breakEvenYr > 0 ? '#1a5c1a' : NAVY, borderRadius: 4, padding: '10 12' }}>
+          <Text style={{ fontSize: 6, color: '#ffffff70', fontFamily: 'Helvetica-Bold', letterSpacing: 0.5, marginBottom: 3 }}>PAYBACK PERIOD</Text>
+          <Text style={{ fontSize: 13, fontFamily: 'Helvetica-Bold', color: YELLOW }}>
+            {roiMonths > 0 ? `${formatNum(roiMonths, 1)} months` : '—'}
+          </Text>
+        </View>
+      </View>
+
+      {/* Bar chart */}
+      <View style={{ marginBottom: 10 }}>
+        <Text style={{ fontSize: 6.5, color: MID, marginBottom: 5 }}>
+          Cumulative savings (navy = below break-even, green = above) · Yellow line = investment of {fr(sum.totalProjectCost)}
+        </Text>
+        <CumulativeSavingsChart data={cumulative} investment={sum.totalProjectCost} />
+      </View>
+
+      {/* Table */}
+      <View style={s.table}>
+        <View style={s.tHead}>
+          <Text style={{ ...s.cCh, flex: 0.5 }}>Yr</Text>
+          <Text style={s.cRh}>Annual Energy Savings</Text>
+          <Text style={s.cRh}>Annual Total Savings</Text>
+          <Text style={s.cRh}>Cumulative Savings</Text>
+          <Text style={s.cRh}>Position vs Investment</Text>
+        </View>
+        {annualSavings.map((yrTotal, i) => {
+          const yrEnergy = sum.totalAnnualSavings * Math.pow(1 + eskom, i)
+          const cum = cumulative[i]
+          const position = cum - sum.totalProjectCost
+          const Row = i % 2 === 0 ? s.tRow : s.tRowAlt
+          return (
+            <View key={i} style={Row} wrap={false}>
+              <Text style={{ ...s.cC, flex: 0.5 }}>{i + 1}</Text>
+              <Text style={s.cR}>{fr(yrEnergy)}</Text>
+              <Text style={s.cBold}>{fr(yrTotal)}</Text>
+              <Text style={s.cR}>{fr(cum)}</Text>
+              <Text style={{ ...s.cR, color: position >= 0 ? '#1a7a1a' : '#cc3333', fontFamily: position >= 0 ? 'Helvetica-Bold' : 'Helvetica' }}>
+                {position >= 0 ? `+${fr(position)}` : fr(position)}
+              </Text>
+            </View>
+          )
+        })}
+        <View style={s.tTot}>
+          <Text style={{ ...s.cCt, flex: 0.5 }}>10yr</Text>
+          <Text style={s.cRt}>{fr(annualSavings.reduce((a, b) => a + b, 0))}</Text>
+          <Text style={s.cYt}>{fr(total10yr)}</Text>
+          <Text style={s.cYt}>{fr(total10yr)}</Text>
+          <Text style={s.cYt}>{fr(total10yr - sum.totalProjectCost)}</Text>
+        </View>
+      </View>
+
+      <PF label="10-Year Projection" />
+    </Page>
+  )
+}
+
 // ── DOCUMENT ──────────────────────────────────────────────────────────────────
-export default function ReportPDF({ job }: { job: Job }) {
+export default function ReportPDF({ job, textOverrides, logoSrc }: {
+  job: Job
+  textOverrides?: ReportTextOverrides
+  logoSrc?: string
+}) {
   const hasAircons = job.rooms.some(r => {
     const ac = r.aircons; return ac && (ac.btu9000 + ac.btu12000 + ac.btu18000 + ac.btu24000) > 0
   })
+  const texts: ReportTextOverrides = textOverrides ?? getDefaultTexts(job)
   return (
     <Document title={`TFS Energy — ${job.clientName} Lighting Audit`} author="Philip Melton — TFS Energy">
-      <CoverPage          job={job} />
-      <LetterPage         job={job} />
-      <OverviewPage       job={job} />
+      <CoverPage          job={job} texts={texts} logoSrc={logoSrc} />
+      <LetterPage         job={job} texts={texts} />
+      <OverviewPage       job={job} texts={texts} />
       <ExecutiveSummaryPage job={job} />
       <CurrentLightingPage  job={job} />
       <ProposedLightingPage job={job} />
       <CostPage           job={job} />
-      <SavingsPage        job={job} />
-      <SolutionSummaryPage  job={job} />
-      <AnnualisedSavingsPage job={job} />
-      <NPVPage            job={job} />
-      <CarbonTaxPage      job={job} />
-      <QuotationPage      job={job} />
+      <SavingsPage          job={job} />
+      <TenYearProjectionPage  job={job} />
+      <SolutionSummaryPage    job={job} />
+      <AnnualisedSavingsPage  job={job} />
+      <NPVPage                job={job} />
+      <CarbonTaxPage          job={job} />
+      <QuotationPage          job={job} />
       {hasAircons && <AirconPage job={job} />}
     </Document>
   )
